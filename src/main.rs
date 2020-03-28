@@ -7,14 +7,56 @@ use std::fmt;
 #[derive(Debug)]
 enum Errors {
     IoError(std::io::Error),
-    ParseError(ParseIntError)
+    ParseError(ParseIntError),
+    OperatorParseError(std::io::Error)
+}
+
+#[derive(Debug)]
+enum Operators {
+    Plus(),
+    Minus(),
+    Multiply(),
+    Divide()
+}
+
+impl fmt::Display for Operators {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Operators::Plus() => write!(f, "+"),
+            Operators::Minus() => write!(f, "-"),
+            Operators::Multiply() => write!(f, "*"),
+            Operators::Divide() => write!(f, "/"),
+        }
+    }
+}
+
+impl error::Error for Operators {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        None
+    }
+}
+
+
+impl std::convert::TryFrom<String> for Operators {
+    type Error = io::Error;
+
+    fn try_from(item:String) -> Result<Self,Self::Error> {
+        match item.as_ref() {
+            "+" => Ok(Operators::Plus()),
+            "-" => Ok(Operators::Minus()),
+            "*" => Ok(Operators::Multiply()),
+            "/" => Ok(Operators::Divide()),
+            x => Err(Self::Error::new(ErrorKind::InvalidInput,format!("The value: {} is not a supported operator!", x)))
+        }
+    }
 }
 
 impl fmt::Display for Errors {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Errors::IoError(erro) => write!(f, "{}", erro),
-            Errors::ParseError(erro) => write!(f, "{}", erro)
+            Errors::ParseError(erro) => write!(f, "{}", erro),
+            Errors::OperatorParseError(erro) => write!(f, "{}", erro)
         }
     }
 }
@@ -23,7 +65,8 @@ impl error::Error for Errors {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Errors::IoError(erro) => Some(erro),
-            Errors::ParseError(erro) => Some(erro)
+            Errors::ParseError(erro) => Some(erro),
+            Errors::OperatorParseError(erro) => Some(erro)
         }
     }
 }
@@ -37,6 +80,8 @@ impl std::convert::From<Errors> for io::Error {
 fn main() -> io::Result<()> {
     let operand1 = get_user_input("Operand 1:")?;
     let operand2 = get_user_input("Operand 2:")?;
+
+    let operator = 
 
     println!("Result: {} + {} = {}", operand1, operand2, operand1 + operand2 );
     Ok(())
